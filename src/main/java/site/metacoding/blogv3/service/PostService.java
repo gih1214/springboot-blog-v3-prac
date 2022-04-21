@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +40,10 @@ public class PostService {
         // 서비스는 여러 가지 로직이 공존한다. 그래서 디버깅하기 힘들다.
 
         // 1. UUID로 파일쓰고 경로 리턴 받기
-        String thumnail = UtilFileUpload.write(uploadFolder, postWriteReqDto.getThumnailFile());
+        String thumnail = null;
+        if (!postWriteReqDto.getThumnailFile().isEmpty()) {
+            thumnail = UtilFileUpload.write(uploadFolder, postWriteReqDto.getThumnailFile());
+        }
 
         // postman으로 공격 당할 수 있으므로 디비에 데이터가 있는지 확인해야 한다.
         // Category category = new Category();
@@ -66,8 +71,18 @@ public class PostService {
         // thumnail);
     }
 
-    public PostRespDto 게시글목록보기(int userId) {
-        List<Post> postsEntity = postRepository.findByUserId(userId);
+    public PostRespDto 게시글목록보기(Integer userId, Pageable Pageable) { // Pageable은 domain으로 import
+        Page<Post> postsEntity = postRepository.findByUserId(userId, Pageable);
+        List<Category> categorysEntity = categoryRepository.findByUserId(userId);
+
+        PostRespDto postRespDto = new PostRespDto(
+                postsEntity,
+                categorysEntity);
+        return postRespDto;
+    }
+
+    public PostRespDto 게시글카테고리별보기(Integer userId, Integer categoryId, Pageable Pageable) {
+        Page<Post> postsEntity = postRepository.findByUserIdAndCategoryId(userId, categoryId, Pageable);
         List<Category> categorysEntity = categoryRepository.findByUserId(userId);
 
         PostRespDto postRespDto = new PostRespDto(

@@ -2,6 +2,8 @@ package site.metacoding.blogv3.web;
 
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,6 +24,7 @@ import site.metacoding.blogv3.web.dto.post.PostWriteReqDto;
 public class PostController {
 
     private final PostService postService;
+
     // CategoryService 사용하지 말고
     // PostService 사용하세요. 이유는 나중에 category, post글 다 같이 가지고 가야 하기 때문임!!
 
@@ -35,10 +38,11 @@ public class PostController {
 
     @GetMapping("/s/post/write-form")
     public String writeForm(@AuthenticationPrincipal LoginUser loginUser, Model model) {
+
         List<Category> categorys = postService.게시글쓰기화면(loginUser.getUser());
 
         if (categorys.size() == 0) {
-            throw new CustomException("글쓰기를 하려면 카테고리 등록이 필요합니다.");
+            throw new CustomException("카테고리 등록이 필요해요");
         }
 
         model.addAttribute("categorys", categorys);
@@ -46,11 +50,19 @@ public class PostController {
     }
 
     @GetMapping("/user/{id}/post")
-    public String postList(@PathVariable Integer id, @AuthenticationPrincipal LoginUser loginUser, Model model) {
+    public String postList(Integer categoryId, @PathVariable Integer id, @AuthenticationPrincipal LoginUser loginUser,
+            Model model, @PageableDefault(size = 3) Pageable Pageable) {
 
         // SELECT * FROM category WHERE userId = :id
-        // 카테고리 가져가세요!!
-        PostRespDto postRespDto = postService.게시글목록보기(id);
+        // 카테고리 가져가기 (category, post 글 다 같이 가져가야 하기 때문에 PostService 사용할 것)
+        PostRespDto postRespDto = null;
+
+        if (categoryId == null) {
+            postRespDto = postService.게시글목록보기(id, Pageable);
+        } else {
+            postRespDto = postService.게시글카테고리별보기(id, categoryId, Pageable);
+        }
+
         model.addAttribute("postRespDto", postRespDto);
         return "/post/list";
     }

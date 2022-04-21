@@ -25,8 +25,7 @@ public class PostWriteReqDto {
     @NotBlank
     private String title;
 
-    @NotNull // 공백은 가능하지만 키값은 전송해야 됨
-    private MultipartFile thumnailFile; // nullable
+    private MultipartFile thumnailFile;
 
     @NotNull // 공백은 가능하지만 키값은 전송해야 됨
     private String content; // nullable
